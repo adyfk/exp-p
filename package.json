@@ -3,6 +3,10 @@
   "version": "0.0.0-development",
   "description": "expression parser",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adyfk/exp-p.git"
+  },
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
@@ -11,7 +15,7 @@
     "commit": "cz"
   },
   "keywords": [],
-  "author": "Adi Fatkhurozi",
+  "author": "Adi Fatkhurozi <ady.fatkhurozi@gmail.com>",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.5.2",
@@ -32,10 +36,6 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/adyfk/exp-p.git"
   },
   "husky": {
     "hooks": {
