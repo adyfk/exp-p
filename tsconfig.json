@@ -5,7 +5,10 @@
     "strict": true,
     "esModuleInterop": true,
     "outDir": "dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "composite": true
   },
   "include": ["src", "test"]
 }
