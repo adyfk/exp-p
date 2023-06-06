@@ -25,9 +25,12 @@ jobs:
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm run build
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: npm run semantic-release
+        run: npm run semantic-release
