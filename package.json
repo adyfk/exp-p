@@ -7,7 +7,8 @@
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "test": "jest",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "commit": "cz"
   },
   "keywords": [],
   "author": "Adi Fatkhurozi",
@@ -27,8 +28,18 @@
       "src/**/*.ts"
     ]
   },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/adyfk/exp-p.git"
+  },
+  "husky": {
+    "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true"
+    }
   }
 }
