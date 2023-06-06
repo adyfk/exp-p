@@ -1,12 +1,13 @@
 {
   "name": "exp-p",
-  "version": "1.0.0",
+  "version": "0.0.0-development",
   "description": "expression parser",
   "main": "index.js",
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "semantic-release": "semantic-release"
   },
   "keywords": [],
   "author": "Adi Fatkhurozi",
@@ -25,5 +26,9 @@
     "collectCoverageFrom": [
       "src/**/*.ts"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adyfk/exp-p.git"
   }
 }
