@@ -41,5 +41,23 @@
     "hooks": {
       "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true"
     }
+  },
+  "release": {
+    "branches": [
+      "master",
+      "next"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/npm",
+        {
+          "pkgRoot": "dist"
+        }
+      ],
+      "@semantic-release/github"
+    ],
+    "ci": true
   }
 }
