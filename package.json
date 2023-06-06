@@ -7,6 +7,9 @@
     "type": "git",
     "url": "https://github.com/adyfk/exp-p.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "start": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build:typescript": "npx tsc --emitDeclarationOnly",
@@ -15,7 +18,8 @@
     "build": "rimraf dist/* && rimraf types/* && npm run build:stable && npm run build:typescript && npm run build:copy-files",
     "test": "jest",
     "semantic-release": "semantic-release",
-    "commit": "cz"
+    "commit": "cz",
+    "publish": "npm run build && cd ./dist && npm publish --access public"
   },
   "keywords": [],
   "author": "Adi Fatkhurozi <ady.fatkhurozi@gmail.com>",
