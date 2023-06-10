@@ -79,6 +79,55 @@ class ExpressionParser {
     return token === 'true';
   }
 
+  private parseArray(ownState: OwnState): any[] {
+    ownState.nextToken();
+    const array: any[] = [];
+
+    while (ownState.currentToken !== ']') {
+      array.push(this.parseExpression(ownState));
+
+      if (ownState.currentToken === ',') {
+        ownState.nextToken();
+      }
+    }
+
+    if (ownState.currentToken !== ']') {
+      throw new Error('Invalid expression');
+    }
+
+    ownState.nextToken();
+    return array;
+  }
+
+  private parseFunction(ownState: OwnState): any {
+    const token = ownState.currentToken;
+    const func = ownState.functions[token];
+    ownState.nextToken();
+
+    if (ownState.currentToken !== '(') {
+      throw new Error('Invalid expression');
+    }
+
+    ownState.nextToken();
+
+    const args: (number | string | boolean | any[])[] = [];
+    while (ownState.currentToken as any !== ')') {
+      args.push(this.parseExpression(ownState));
+
+      if (ownState.currentToken as any === ',') {
+        ownState.nextToken();
+      }
+    }
+
+    if (ownState.currentToken as any !== ')') {
+      throw new Error('Invalid expression');
+    }
+
+    ownState.nextToken();
+
+    return func(...args);
+  }
+
   private parseFactor(ownState: OwnState): number | string | boolean | any[] {
     let value: number | string | boolean | any[] = 0;
     const token = ownState.currentToken;
@@ -103,52 +152,12 @@ class ExpressionParser {
     } else if (token === 'true' || token === 'false') {
       value = this.parseBoolean(ownState);
     } else if (token === '[') {
-      ownState.nextToken();
-      const array: any[] = [];
-
-      while (ownState.currentToken !== ']') {
-        array.push(this.parseExpression(ownState));
-
-        if (ownState.currentToken === ',') {
-          ownState.nextToken();
-        }
-      }
-
-      if (ownState.currentToken !== ']') {
-        throw new Error('Invalid expression');
-      }
-
-      ownState.nextToken();
-      value = array;
+      value = this.parseArray(ownState);
     } else if (ownState.variables.hasOwnProperty(token)) {
       value = ownState.variables[token];
       ownState.nextToken();
     } else if (ownState.functions.hasOwnProperty(token)) {
-      const func = ownState.functions[token];
-      ownState.nextToken();
-
-      if (ownState.currentToken !== '(') {
-        throw new Error('Invalid expression');
-      }
-
-      ownState.nextToken();
-
-      const args: (number | string | boolean | any[])[] = [];
-      while (ownState.currentToken as any !== ')') {
-        args.push(this.parseExpression(ownState));
-
-        if (ownState.currentToken as any === ',') {
-          ownState.nextToken();
-        }
-      }
-
-      if (ownState.currentToken as any !== ')') {
-        throw new Error('Invalid expression');
-      }
-
-      ownState.nextToken();
-
-      value = func(...args);
+      value = this.parseFunction(ownState)
     } else if (ownState.operators.hasOwnProperty(token)) {
       const operator = ownState.operators[token];
       ownState.nextToken();

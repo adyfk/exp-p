@@ -36,13 +36,25 @@ describe('Example', () => {
   })
   it('boolean', () => {
     const parser = new ExpressionParser();
-    const result = parser.evaluate('true AND false');
-    expect(result).toBe(false)
+    expect(parser.evaluate('true AND false')).toBe(false)
+    expect(parser.evaluate('true OR false')).toBe(true)
   })
   it('array', () => {
     const parser = new ExpressionParser();
     expect(parser.evaluate("[1, 2, 3, 4]")).toEqual([1, 2, 3, 4])
     expect(parser.evaluate("[\"2\", 5]")).toEqual(["2", 5])
     expect(parser.evaluate("[2 + 5, 5]")).toEqual([7, 5])
+    expect(parser.evaluate("[5, x]", { x: 2 })).toEqual([5, 2])
   })
+  // it('object', () => {
+  //   const parser = new ExpressionParser();
+  //   expect(parser.evaluate("{ \"name\": \"ADI\", \"age\": 20 }")).toEqual({
+  //     name: "ADI",
+  //     age: 20
+  //   })
+  //   expect(parser.evaluate("{ \"name\": \"ADI\", \"age\": 5 + 2 }")).toEqual({
+  //     name: "ADI",
+  //     age: 7
+  //   })
+  // })
 });
