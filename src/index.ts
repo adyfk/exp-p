@@ -1,8 +1,8 @@
 export type VariableMap = { [key: string]: number | string | boolean | any[] };
-export type FunctionMap = { [key: string]: (...args: (any)[]) => any };
+export type FunctionMap = { [key: string]: (...args: any[]) => any };
 export type OperatorMap = { [key: string]: (a: any, b: any) => any };
 
-type OwnState = {
+interface ParserState {
   tokens: string[];
   currentTokenIndex: number;
   currentToken: string;
@@ -10,7 +10,7 @@ type OwnState = {
   variables: VariableMap;
   functions: FunctionMap;
   operators: OperatorMap;
-};
+}
 
 class ExpressionParser {
   private variables: VariableMap;
@@ -20,10 +20,10 @@ class ExpressionParser {
   constructor(variables?: VariableMap, functions?: FunctionMap, operators?: OperatorMap) {
     this.variables = {
       PI: Math.PI,
-      ...variables
+      ...(variables || {})
     };
     this.functions = {
-      ...functions,
+      ...(functions || {})
     };
     this.operators = {
       '+': (a, b) => a + b,
@@ -40,141 +40,131 @@ class ExpressionParser {
       '==': (a, b) => a === b,
       '!=': (a, b) => a !== b,
       '^': (a, b) => Math.pow(a, b),
-      // '%': (a, b) => a % b,
-      ...operators,
+      ...(operators || {})
     };
   }
+
   private tokenize(expression: string): string[] {
     const regex = /([-+*/(),<>!=%^\[\]])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+)/g;
     return expression.match(regex) || [];
   }
 
-  private parseNumber(ownState: OwnState): number {
-    const token = ownState.currentToken;
+  private parseNumber(state: ParserState): number {
+    const token = state.currentToken;
     if (token === undefined || isNaN(Number(token))) {
       throw new Error('Invalid expression');
     }
 
-    ownState.nextToken();
+    state.nextToken();
     return parseFloat(token);
   }
 
-  private parseStringDoubleTick(ownState: OwnState): string {
-    const token = ownState.currentToken;
-    if (token === undefined || !token.startsWith('"') || !token.endsWith('"')) {
+  private parseString(state: ParserState, tickType: string): string {
+    const token = state.currentToken;
+    if (token === undefined || !token.startsWith(tickType) || !token.endsWith(tickType)) {
       throw new Error('Invalid expression');
     }
 
-    ownState.nextToken();
+    state.nextToken();
     return token.slice(1, -1);
   }
 
-  private parseStringSingleTick(ownState: OwnState): string {
-    const token = ownState.currentToken;
-    if (token === undefined || !token.startsWith('\'') || !token.endsWith('\'')) {
-      throw new Error('Invalid expression');
-    }
-
-    ownState.nextToken();
-    return token.slice(1, -1);
-  }
-
-  private parseBoolean(ownState: OwnState): boolean {
-    const token = ownState.currentToken;
+  private parseBoolean(state: ParserState): boolean {
+    const token = state.currentToken;
     if (token === undefined || (token !== 'true' && token !== 'false')) {
       throw new Error('Invalid expression');
     }
 
-    ownState.nextToken();
+    state.nextToken();
     return token === 'true';
   }
 
-  private parseArray(ownState: OwnState): any[] {
-    ownState.nextToken();
+  private parseArray(state: ParserState): any[] {
+    state.nextToken();
     const array: any[] = [];
 
-    while (ownState.currentToken !== ']') {
-      array.push(this.parseExpression(ownState));
+    while (state.currentToken !== ']') {
+      array.push(this.parseExpression(state));
 
-      if (ownState.currentToken === ',') {
-        ownState.nextToken();
+      if (state.currentToken === ',') {
+        state.nextToken();
       }
     }
 
-    if (ownState.currentToken !== ']') {
+    if (state.currentToken !== ']') {
       throw new Error('Invalid expression');
     }
 
-    ownState.nextToken();
+    state.nextToken();
     return array;
   }
 
-  private parseFunction(ownState: OwnState): any {
-    const token = ownState.currentToken;
-    const func = ownState.functions[token];
-    ownState.nextToken();
+  private parseFunction(state: ParserState): any {
+    const token = state.currentToken;
+    const func = state.functions[token];
+    state.nextToken();
 
-    if (ownState.currentToken !== '(') {
+    if (state.currentToken !== '(') {
       throw new Error('Invalid expression');
     }
 
-    ownState.nextToken();
+    state.nextToken();
 
-    const args: (number | string | boolean | any[])[] = [];
-    while (ownState.currentToken as any !== ')') {
-      args.push(this.parseExpression(ownState));
+    const args: any[] = [];
+    while (state.currentToken as any !== ')') {
+      args.push(this.parseExpression(state));
 
-      if (ownState.currentToken as any === ',') {
-        ownState.nextToken();
+      if (state.currentToken as any === ',') {
+        state.nextToken();
       }
     }
 
-    if (ownState.currentToken as any !== ')') {
+    if (state.currentToken as any !== ')') {
       throw new Error('Invalid expression');
     }
 
-    ownState.nextToken();
+    state.nextToken();
 
     return func(...args);
   }
 
-  private parseFactor(ownState: OwnState): number | string | boolean | any[] {
+  private parseFactor(state: ParserState): any {
     let value: number | string | boolean | any[] = 0;
-    const token = ownState.currentToken;
+    const token = state.currentToken;
 
     if (token === undefined) {
       throw new Error('Invalid expression');
     }
 
     if (token === '(') {
-      ownState.nextToken();
-      value = this.parseExpression(ownState);
+      state.nextToken();
+      value = this.parseExpression(state);
 
-      if (ownState.currentToken !== ')') {
+      if (state.currentToken !== ')') {
         throw new Error('Invalid expression');
       }
 
-      ownState.nextToken();
+      state.nextToken();
     } else if (!isNaN(Number(token))) {
-      value = this.parseNumber(ownState);
+      value = this.parseNumber(state);
     } else if (token.startsWith('"') && token.endsWith('"')) {
-      value = this.parseStringDoubleTick(ownState);
+      value = this.parseString(state, '"');
     } else if (token.startsWith('\'') && token.endsWith('\'')) {
-      value = this.parseStringSingleTick(ownState);
+      value = this.parseString(state, '\'');
     } else if (token === 'true' || token === 'false') {
-      value = this.parseBoolean(ownState);
+      value = this.parseBoolean(state);
     } else if (token === '[') {
-      value = this.parseArray(ownState);
-    } else if (ownState.variables.hasOwnProperty(token)) {
-      value = ownState.variables[token];
-      ownState.nextToken();
-    } else if (ownState.functions.hasOwnProperty(token)) {
-      value = this.parseFunction(ownState)
-    } else if (ownState.operators.hasOwnProperty(token)) {
-      const operator = ownState.operators[token];
-      ownState.nextToken();
+      value = this.parseArray(state);
+    } else if (state.variables.hasOwnProperty(token)) {
+      value = state.variables[token];
+      state.nextToken();
+    } else if (state.functions.hasOwnProperty(token)) {
+      value = this.parseFunction(state);
+    } else if (state.operators.hasOwnProperty(token)) {
+      const operator = state.operators[token];
+      state.nextToken();
 
-      const factor = this.parseFactor(ownState);
+      const factor = this.parseFactor(state);
 
       value = operator(0, factor);
     } else {
@@ -184,14 +174,14 @@ class ExpressionParser {
     return value;
   }
 
-  private parseTerm(ownState: OwnState): number {
-    let value = this.parseFactor(ownState) as number;
+  private parseTerm(state: ParserState): number {
+    let value = this.parseFactor(state) as number;
     while (true) {
-      const token = ownState.currentToken;
+      const token = state.currentToken;
       if (token === '*' || token === '/') {
         const operator = token;
-        ownState.nextToken();
-        const factor = this.parseFactor(ownState);
+        state.nextToken();
+        const factor = this.parseFactor(state);
         if (operator === '*') {
           value *= factor as number;
         } else {
@@ -205,16 +195,16 @@ class ExpressionParser {
     return value;
   }
 
-  private parseExpression(ownState: OwnState): any {
-    let value = this.parseTerm(ownState);
+  private parseExpression(state: ParserState): any {
+    let value = this.parseTerm(state);
 
     while (true) {
-      const token = ownState.currentToken as string;
-      if (token in ownState.operators) {
+      const token = state.currentToken;
+      if (token in state.operators) {
         const operator = token;
-        ownState.nextToken();
-        const term = this.parseTerm(ownState);
-        value = ownState.operators[operator as any](value, term);
+        state.nextToken();
+        const term = this.parseTerm(state);
+        value = state.operators[operator](value, term);
       } else {
         break;
       }
@@ -233,7 +223,7 @@ class ExpressionParser {
     const functions = { ...this.functions, ...(tempFunctions || {}) };
     const operators = { ...this.operators, ...(tempOperators || {}) };
 
-    const ownState: OwnState = {
+    const state: ParserState = {
       tokens: this.tokenize(expression),
       currentTokenIndex: 0,
       get currentToken() {
@@ -247,9 +237,9 @@ class ExpressionParser {
       operators
     };
 
-    const result = this.parseExpression(ownState);
+    const result = this.parseExpression(state);
 
-    if (ownState.currentToken !== undefined) {
+    if (state.currentToken !== undefined) {
       throw new Error('Invalid expression');
     }
 

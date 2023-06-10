@@ -41,11 +41,11 @@ describe('Example', () => {
   })
   // it('object', () => {
   //   const parser = new ExpressionParser();
-  //   expect(parser.evaluate("{ \"name\": \"ADI\", \"age\": 20 }")).toEqual({
+  //   expect(parser.evaluate("{ name: 'ADI', age: 20 }")).toEqual({
   //     name: "ADI",
   //     age: 20
   //   })
-  //   expect(parser.evaluate("{ \"name\": \"ADI\", \"age\": 5 + 2 }")).toEqual({
+  //   expect(parser.evaluate("{ name: 'ADI', age: 5 + 2 }")).toEqual({
   //     name: "ADI",
   //     age: 7
   //   })
