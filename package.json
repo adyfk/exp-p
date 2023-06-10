@@ -16,7 +16,8 @@
     "build:stable": "node scripts/build.js stable",
     "build:copy-files": "node scripts/copy-files.js",
     "build": "rimraf dist/* && rimraf types/* && npm run build:stable && npm run build:typescript && npm run build:copy-files",
-    "test": "jest --watchAll",
+    "test": "jest",
+    "test:all": "jest --watchAll",
     "semantic-release": "semantic-release",
     "commit": "cz",
     "publish": "npm run build && cd ./dist && npm publish --access public"
