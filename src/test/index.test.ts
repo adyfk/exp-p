@@ -39,15 +39,15 @@ describe('Example', () => {
     expect(parser.evaluate("[2 + 5, 5]")).toEqual([7, 5])
     expect(parser.evaluate("[5, x]", { x: 2 })).toEqual([5, 2])
   })
-  // it('object', () => {
-  //   const parser = new ExpressionParser();
-  //   expect(parser.evaluate("{ name: 'ADI', age: 20 }")).toEqual({
-  //     name: "ADI",
-  //     age: 20
-  //   })
-  //   expect(parser.evaluate("{ name: 'ADI', age: 5 + 2 }")).toEqual({
-  //     name: "ADI",
-  //     age: 7
-  //   })
-  // })
+  it('object', () => {
+    const parser = new ExpressionParser();
+    expect(parser.evaluate("{ name: 'ADI', age: 20 }")).toEqual({
+      name: "ADI",
+      age: 20
+    })
+    expect(parser.evaluate("{ name: 'ADI', age: 5 + 2 }")).toEqual({
+      name: "ADI",
+      age: 7
+    })
+  })
 });

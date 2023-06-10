@@ -45,7 +45,7 @@ class ExpressionParser {
   }
 
   private tokenize(expression: string): string[] {
-    const regex = /([-+*/(),<>!=%^\[\]])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+)/g;
+    const regex = /([-+*/():,<>!=%^\[\]\{\}])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+)/g;
     return expression.match(regex) || [];
   }
 
@@ -99,6 +99,43 @@ class ExpressionParser {
     return array;
   }
 
+  private parseObject(state: ParserState): object {
+    const obj: { [key: string]: any } = {};
+    while (true) {
+      const key = state.currentToken;
+      if (typeof key !== 'string') {
+        throw new Error('Invalid object literal');
+      }
+      state.nextToken();
+      if (state.currentToken !== ':') {
+        throw new Error('Invalid object literal');
+      }
+
+      state.nextToken();
+
+      const value = this.parseExpression(state);
+      obj[key] = value;
+
+      if (state.currentToken as any === '}') {
+        break;
+      }
+
+      if (state.currentToken as any !== ',') {
+        throw new Error('Invalid object literal');
+      }
+
+      state.nextToken();
+    }
+
+    if (state.currentToken as any !== '}') {
+      throw new Error('Invalid object literal');
+    }
+
+    state.nextToken();
+
+    return obj;
+  }
+
   private parseFunction(state: ParserState): any {
     const token = state.currentToken;
     const func = state.functions[token];
@@ -129,13 +166,13 @@ class ExpressionParser {
   }
 
   private parseFactor(state: ParserState): any {
-    let value: number | string | boolean | any[] = 0;
+    let value: number | string | boolean | any[] | object = 0;
     const token = state.currentToken;
 
     if (token === undefined) {
       throw new Error('Invalid expression');
     }
-
+    console.log(token)
     if (token === '(') {
       state.nextToken();
       value = this.parseExpression(state);
@@ -167,6 +204,9 @@ class ExpressionParser {
       const factor = this.parseFactor(state);
 
       value = operator(0, factor);
+    } else if (token === '{') {
+      state.nextToken()
+      value = this.parseObject(state);
     } else {
       throw new Error('Invalid expression');
     }
