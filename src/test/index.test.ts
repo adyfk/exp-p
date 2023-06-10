@@ -11,9 +11,6 @@ describe('Example', () => {
     expect(parser.evaluate('5 + 4 * 4')).toBe(21)
     expect(parser.evaluate('5 % 3')).toBe(2)
   });
-  it('basic infix operator exp', () => {
-    const parser = new ExpressionParser()
-  });
   it('function', () => {
     // Usage example
     const variables = { x: 5 };
