@@ -25,17 +25,17 @@ Our expression parser is built with a strong focus on performance to handle dema
 You can install the library via npm:
 
 ```shell
-npm install exp-p
+npm install @adifkz/exp-p
 ```
 
 ## Usage
 ```javascript
 
-const { ExpressionParser } = require('expression-parser');
+const ExpressionParser = require('@adifkz/exp-p');
 
 const parser = new ExpressionParser();
-const expression = '2 * (3 + x)';
-const result = parser.evaluate(expression, { x: 5 });
+const expression = '2 * (3 + 5)';
+const result = parser.evaluate(expression);
 
 console.log(result); // Output: 16
 
