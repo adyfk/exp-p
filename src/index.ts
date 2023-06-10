@@ -2,19 +2,30 @@ export type VariableMap = { [key: string]: number | string | boolean };
 export type FunctionMap = { [key: string]: (...args: (any)[]) => any };
 export type OperatorMap = { [key: string]: (a: any, b: any) => any };
 
+type OwnState = {
+  tokens: string[];
+  currentTokenIndex: number;
+  currentToken: string;
+  nextToken: () => void;
+  variables: VariableMap;
+  functions: FunctionMap;
+  operators: OperatorMap;
+}
+
 class ExpressionParser {
-  private tokens: string[];
-  private currentTokenIndex: number;
   private variables: VariableMap;
   private functions: FunctionMap;
   private operators: OperatorMap;
 
   constructor(variables?: VariableMap, functions?: FunctionMap, operators?: OperatorMap) {
-    this.tokens = [];
-    this.currentTokenIndex = 0;
-    this.variables = variables || {};
-    this.functions = functions || {};
-    this.operators = operators || {
+    this.variables = {
+      PI: Math.PI,
+      ...variables
+    };
+    this.functions = {
+      ...functions,
+    };
+    this.operators = {
       '+': (a, b) => a + b,
       '-': (a, b) => a - b,
       '*': (a, b) => a * b,
@@ -27,6 +38,8 @@ class ExpressionParser {
       '<=': (a, b) => a <= b,
       '==': (a, b) => a === b,
       '!=': (a, b) => a !== b,
+      '^': (a, b) => Math.pow(a, b),
+      ...operators,
     };
   }
 
@@ -35,99 +48,90 @@ class ExpressionParser {
     return expression.match(regex) || [];
   }
 
-  private getCurrentToken(): string | undefined {
-    return this.tokens[this.currentTokenIndex];
-  }
-
-  private getNextToken(): string | undefined {
-    this.currentTokenIndex++;
-    return this.getCurrentToken();
-  }
-
-  private parseNumber(): number {
-    const token = this.getCurrentToken();
+  private parseNumber(ownState: OwnState): number {
+    const token = ownState.currentToken;
     if (token === undefined || isNaN(Number(token))) {
       throw new Error('Invalid expression');
     }
 
-    this.getNextToken();
+    ownState.nextToken()
     return parseFloat(token);
   }
 
-  private parseString(): string {
-    const token = this.getCurrentToken();
+  private parseString(ownState: OwnState): string {
+    const token = ownState.currentToken;
     if (token === undefined || !token.startsWith('"') || !token.endsWith('"')) {
       throw new Error('Invalid expression');
     }
 
-    this.getNextToken();
+    ownState.nextToken()
     return token.slice(1, -1);
   }
 
-  private parseBoolean(): boolean {
-    const token = this.getCurrentToken();
+  private parseBoolean(ownState: OwnState): boolean {
+    const token = ownState.currentToken;
     if (token === undefined || (token !== 'true' && token !== 'false')) {
       throw new Error('Invalid expression');
     }
 
-    this.getNextToken();
+    ownState.nextToken()
     return token === 'true';
   }
 
 
-  private parseFactor(): number | string | boolean {
+  private parseFactor(ownState: OwnState): number | string | boolean {
     let value: number | string | boolean = 0;
-    const token = this.getCurrentToken();
+    const token = ownState.currentToken;
 
     if (token === undefined) {
       throw new Error('Invalid expression');
     }
 
     if (token === '(') {
-      this.getNextToken();
-      value = this.parseExpression();
+      ownState.nextToken()
+      value = this.parseExpression(ownState);
 
-      if (this.getCurrentToken() !== ')') {
+      if (ownState.currentToken !== ')') {
         throw new Error('Invalid expression');
       }
 
-      this.getNextToken();
+      ownState.nextToken()
     } else if (!isNaN(Number(token))) {
-      value = this.parseNumber();
+      value = this.parseNumber(ownState);
     } else if (token.startsWith('"') && token.endsWith('"')) {
-      value = this.parseString();
+      value = this.parseString(ownState);
     } else if (token === 'true' || token === 'false') {
-      value = this.parseBoolean();
-    } else if (this.variables.hasOwnProperty(token)) {
-      value = this.variables[token];
-      this.getNextToken();
-    } else if (this.functions.hasOwnProperty(token)) {
-      const func = this.functions[token];
-      this.getNextToken();
+      value = this.parseBoolean(ownState);
+    } else if (ownState.variables.hasOwnProperty(token)) {
+      value = ownState.variables[token];
+      ownState.nextToken()
+    } else if (ownState.functions.hasOwnProperty(token)) {
+      const func = ownState.functions[token];
+      ownState.nextToken()
 
-      if (this.getCurrentToken() !== '(') {
+      if (ownState.currentToken !== '(') {
         throw new Error('Invalid expression');
       }
 
-      this.getNextToken();
+      ownState.nextToken()
 
       const args: (number | string | boolean)[] = [];
-      while (this.getCurrentToken() !== ')') {
-        args.push(this.parseExpression());
+      while (ownState.currentToken as any !== ')') {
+        args.push(this.parseExpression(ownState));
 
-        if (this.getCurrentToken() === ',') {
-          this.getNextToken();
+        if (ownState.currentToken as any === ',') {
+          ownState.nextToken()
         }
       }
 
-      this.getNextToken();
+      ownState.nextToken()
 
       value = func(...args);
-    } else if (this.operators.hasOwnProperty(token)) {
-      const operator = this.operators[token];
-      this.getNextToken();
+    } else if (ownState.operators.hasOwnProperty(token)) {
+      const operator = ownState.operators[token];
+      ownState.nextToken()
 
-      const factor = this.parseFactor();
+      const factor = this.parseFactor(ownState);
 
       value = operator(0, factor as number | boolean);
     } else {
@@ -137,15 +141,15 @@ class ExpressionParser {
     return value;
   }
 
-  private parseTerm(): number {
-    let value = this.parseFactor() as number;
+  private parseTerm(ownState: OwnState): number {
+    let value = this.parseFactor(ownState) as number;
 
     while (true) {
-      const token = this.getCurrentToken();
+      const token = ownState.currentToken;
       if (token === '*' || token === '/') {
         const operator = token;
-        this.getNextToken();
-        const factor = this.parseFactor();
+        ownState.nextToken()
+        const factor = this.parseFactor(ownState);
         if (operator === '*') {
           value *= factor as number;
         } else {
@@ -159,21 +163,21 @@ class ExpressionParser {
     return value;
   }
 
-  private parseExpression(): number | string | boolean {
-    let value = this.parseTerm();
+  private parseExpression(ownState: OwnState): number | string | boolean {
+    let value = this.parseTerm(ownState);
 
     while (true) {
-      const token = this.getCurrentToken() as string;
-      if (token in this.operators) {
+      const token = ownState.currentToken as string;
+      if (token in ownState.operators) {
         const operator = token;
-        this.getNextToken();
-        const term = this.parseTerm();
+        ownState.nextToken()
+        const term = this.parseTerm(ownState);
         if (operator === '+') {
           value += term as number;
         } else if (operator === '-') {
           value -= term as number;
         } else {
-          value = this.operators[operator as any](value, term);
+          value = ownState.operators[operator as any](value, term);
         }
       } else {
         break;
@@ -183,31 +187,33 @@ class ExpressionParser {
     return value as number | string | boolean;
   }
 
-  public evaluate(expression: string, tempVariables?: VariableMap, tempFunctions?: FunctionMap): number | string | boolean {
-    const temporaryVariables = { ...this.variables, ...(tempVariables || {}) };
-    const temporaryFunctions = { ...this.functions, ...(tempFunctions || {}) };
+  public evaluate(
+    expression: string,
+    tempVariables?: VariableMap,
+    tempFunctions?: FunctionMap,
+    tempOperators?: OperatorMap,
+  ): number | string | boolean {
+    const variables = { ...this.variables, ...(tempVariables || {}) };
+    const functions = { ...this.functions, ...(tempFunctions || {}) };
+    const operators = { ...this.operators, ...(tempOperators || {}) };
 
-    this.tokens = this.tokenize(expression);
-    this.currentTokenIndex = 0;
+    const ownState: OwnState = {
+      tokens: this.tokenize(expression),
+      currentTokenIndex: 0,
+      get currentToken() {
+        return this.tokens[this.currentTokenIndex]
+      },
+      nextToken() {
+        this.currentTokenIndex++;
+      },
+      variables,
+      functions,
+      operators
+    }
 
-    const evaluateInternal = () => {
-      const originalVariables = this.variables;
-      const originalFunctions = this.functions;
+    const result = this.parseExpression(ownState);
 
-      this.variables = { ...temporaryVariables };
-      this.functions = { ...temporaryFunctions };
-
-      const result = this.parseExpression();
-
-      this.variables = originalVariables;
-      this.functions = originalFunctions;
-
-      return result;
-    };
-
-    const result = evaluateInternal();
-
-    if (this.getCurrentToken() !== undefined) {
+    if (ownState.currentToken !== undefined) {
       throw new Error('Invalid expression');
     }
 
