@@ -19,20 +19,16 @@ describe('Example', () => {
     const variables = { x: 5 };
     const functions: FunctionMap = {
       ADD: (a: number, b: number) => a + b,
-    };
-    const parser = new ExpressionParser(variables, functions);
-    const result = parser.evaluate('ADD(1 + 1, 5) + x');
-    expect(result).toBe(12)
-  });
-  it('string', () => {
-    const variables = { x: 5 };
-    const functions: FunctionMap = {
-      ADD: (a: number, b: number) => a + b,
       LENGTH: (str: string) => str.length,
     };
+    const parser = new ExpressionParser(variables, functions);
+    expect(parser.evaluate('ADD(1 + 1, 5) + x')).toBe(12)
+    expect(parser.evaluate('LENGTH("ADI") + 5', variables, functions)).toBe(8)
+  });
+  it('string', () => {
     const parser = new ExpressionParser();
-    const result = parser.evaluate('LENGTH("ADI") + 5', variables, functions);
-    expect(result).toBe(8)
+    expect(parser.evaluate('"ADI"')).toBe("ADI")
+    expect(parser.evaluate('\'ADI\'')).toBe("ADI")
   })
   it('boolean', () => {
     const parser = new ExpressionParser();

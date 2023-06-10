@@ -45,7 +45,7 @@ class ExpressionParser {
     };
   }
   private tokenize(expression: string): string[] {
-    const regex = /([-+*/(),<>!=%^\[\]])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:\w+)/g;
+    const regex = /([-+*/(),<>!=%^\[\]])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+)/g;
     return expression.match(regex) || [];
   }
 
@@ -59,9 +59,19 @@ class ExpressionParser {
     return parseFloat(token);
   }
 
-  private parseString(ownState: OwnState): string {
+  private parseStringDoubleTick(ownState: OwnState): string {
     const token = ownState.currentToken;
     if (token === undefined || !token.startsWith('"') || !token.endsWith('"')) {
+      throw new Error('Invalid expression');
+    }
+
+    ownState.nextToken();
+    return token.slice(1, -1);
+  }
+
+  private parseStringSingleTick(ownState: OwnState): string {
+    const token = ownState.currentToken;
+    if (token === undefined || !token.startsWith('\'') || !token.endsWith('\'')) {
       throw new Error('Invalid expression');
     }
 
@@ -148,7 +158,10 @@ class ExpressionParser {
     } else if (!isNaN(Number(token))) {
       value = this.parseNumber(ownState);
     } else if (token.startsWith('"') && token.endsWith('"')) {
-      value = this.parseString(ownState);
+      value = this.parseStringDoubleTick(ownState);
+    } else if (token.startsWith('\'') && token.endsWith('\'')) {
+      console.log('single', token)
+      value = this.parseStringSingleTick(ownState);
     } else if (token === 'true' || token === 'false') {
       value = this.parseBoolean(ownState);
     } else if (token === '[') {
@@ -176,7 +189,6 @@ class ExpressionParser {
     let value = this.parseFactor(ownState) as number;
     while (true) {
       const token = ownState.currentToken;
-      console.log(token, value)
       if (token === '*' || token === '/') {
         const operator = token;
         ownState.nextToken();
