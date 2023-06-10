@@ -172,7 +172,6 @@ class ExpressionParser {
     if (token === undefined) {
       throw new Error('Invalid expression');
     }
-    console.log(token)
     if (token === '(') {
       state.nextToken();
       value = this.parseExpression(state);
