@@ -160,7 +160,6 @@ class ExpressionParser {
     } else if (token.startsWith('"') && token.endsWith('"')) {
       value = this.parseStringDoubleTick(ownState);
     } else if (token.startsWith('\'') && token.endsWith('\'')) {
-      console.log('single', token)
       value = this.parseStringSingleTick(ownState);
     } else if (token === 'true' || token === 'false') {
       value = this.parseBoolean(ownState);
