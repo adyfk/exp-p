@@ -1,5 +1,5 @@
 {
-  "name": "exp-p",
+  "name": "@adifkz/exp-p",
   "version": "0.0.0-development",
   "description": "expression parser",
   "main": "index.js",

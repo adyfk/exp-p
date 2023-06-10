@@ -10,5 +10,6 @@
     "emitDeclarationOnly": true,
     "composite": true
   },
-  "include": ["src", "test"]
+  "include": ["src", "test"],
+  "exclude": ["**/*.test.ts", "**/*.mock.ts"]
 }
