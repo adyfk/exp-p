@@ -112,7 +112,7 @@ type FunctionMap = { [name: string]: Function };
 ```
 
 ## License
-This library is licensed under the ISC License.
+This library is licensed under the MIT License.
 
 ## Author
 @adifkz/exp-p is developed and maintained by Adi Fatkhurozi. For any inquiries or feedback, please contact Adi Fatkhurozi at ady.fatkhurozi@gmail.com.
