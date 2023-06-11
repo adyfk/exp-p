@@ -1,4 +1,4 @@
-export type VariableMap = { [key: string]: number | string | boolean | any[] };
+export type VariableMap = { [key: string]: number | string | boolean | any[] | object };
 export type FunctionMap = { [key: string]: (...args: any[]) => any };
 export type OperatorMap = { [key: string]: (a: any, b: any) => any };
 
@@ -45,7 +45,7 @@ class ExpressionParser {
   }
 
   private tokenize(expression: string): string[] {
-    const regex = /([-+*/():,<>!=%^\[\]\{\}])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+)/g;
+    const regex = /([-+*/():,<>!=%^\[\]\{\}])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+(?:\.\w+)*(?:\[\d+\])?)/g;
     return expression.match(regex) || [];
   }
 
@@ -191,6 +191,23 @@ class ExpressionParser {
       value = this.parseBoolean(state);
     } else if (token === '[') {
       value = this.parseArray(state);
+    } else if (token === '{') {
+      state.nextToken()
+      value = this.parseObject(state);
+    } else if (token.includes('.')) {
+      const objectPath = token.split('.');
+      let objectValue = state.variables as any
+
+      for (const path of objectPath) {
+        if (typeof objectValue !== 'object' || objectValue === null || !objectValue.hasOwnProperty(path)) {
+          throw new Error('Invalid object path');
+        } else {
+          objectValue = objectValue[path];
+        }
+      }
+
+      value = objectValue;
+      state.nextToken();
     } else if (state.variables.hasOwnProperty(token)) {
       value = state.variables[token];
       state.nextToken();
@@ -203,9 +220,6 @@ class ExpressionParser {
       const factor = this.parseFactor(state);
 
       value = operator(0, factor);
-    } else if (token === '{') {
-      state.nextToken()
-      value = this.parseObject(state);
     } else {
       throw new Error('Invalid expression');
     }

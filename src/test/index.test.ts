@@ -10,6 +10,7 @@ describe('Example', () => {
     expect(parser.evaluate('5 ^ 2 + 2')).toBe(27)
     expect(parser.evaluate('5 + 4 * 4')).toBe(21)
     expect(parser.evaluate('5 % 3')).toBe(2)
+    expect(parser.evaluate('5.5 * 3')).toBe(16.5)
   });
   it('function', () => {
     // Usage example
@@ -49,5 +50,9 @@ describe('Example', () => {
       name: "ADI",
       age: 7
     })
+    expect(parser.evaluate("object.name", { object: { name: 'ADI' } })).toEqual('ADI')
+    expect(parser.evaluate("object.name", { object: { name: 'ADI' } })).toEqual('ADI')
+    expect(parser.evaluate("object.0.name", { object: [{ name: 'ADI' }] })).toEqual('ADI')
+    expect(parser.evaluate("object.0.object.0.name", { object: [{ name: 'ADI', object: [{ name: "ADI" }] }] })).toEqual('ADI')
   })
 });
