@@ -2,7 +2,7 @@
 // import Benchmark from "benchmark";
 // import { init, formula } from "expressionparser";
 // import ExpressionParser from "..";
-test("x", () => { })
+
 // test('test', () => {
 //   const p2 = init(formula, (): any => {
 //     return null;
@@ -30,3 +30,5 @@ test("x", () => { })
 
 //   suite.run();
 // })
+
+test("x", () => { })

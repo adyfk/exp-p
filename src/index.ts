@@ -1,7 +1,3 @@
-type ValueType = number | string | boolean | any[] | object;
-export type VariableMap = { [key: string]: ValueType };
-export type FunctionMap = { [key: string]: (...args: any[]) => any };
-export type OperatorMap = { [key: string]: (a: any, b: any) => any };
 
 interface ParserState {
   tokens: string[];
@@ -12,6 +8,13 @@ interface ParserState {
   functions: FunctionMap;
   operators: OperatorMap;
 }
+
+type ValueType = number | string | boolean | any[] | object;
+export type VariableMap = { [key: string]: ValueType };
+export type FunctionMap = { [key: string]: (state: ParserState, ...args: any[]) => any };
+export type OperatorMap = { [key: string]: (a: any, b: any) => any };
+
+const REGEX = /([<>]=|==|!=)|([-+*/():,<>!=%^\[\]\{\}])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+(?:\.\w+)*(?:\[\d+\])?)/g;
 
 class ExpressionParser {
   private variables: VariableMap;
@@ -24,6 +27,104 @@ class ExpressionParser {
       ...(variables || {})
     };
     this.functions = {
+      // NUMBER
+      CEIL: (_, value: number) => Math.ceil(value),
+      ROUND: (_, value: number) => Math.round(value),
+      RANDOM: () => Math.random(),
+      FLOOR: (_, value: number) => Math.floor(value),
+      ABS: (_, value: number) => Math.abs(value),
+      // STRING
+      SPLIT: (_, arr: string, arg: string) => arr.split(arg),
+      // CONDITION
+      IF: (_, condition: boolean, truthy: any, falsy) => {
+        return (condition) ? truthy : falsy
+      },
+      // ARRAY
+      MIN: (_, ...args) => Math.min(...args),
+      MAX: (_, ...args) => Math.max(...args),
+      SUM: (_, arr) => arr.reduce((prev: number, curr: number) => prev + curr, 0),
+      LENGTH: (_, value) => value.length,
+      JOIN: (_, arr: string[], arg: string) => arr.join(arg),
+      FILTER: (state, items: any[], filterExpression: string) => {
+        const filteredItems = items?.filter((item: any, index) => {
+          const result = this.evaluate(
+            filterExpression,
+            {
+              ...state.variables,
+              __ITEM__: item,
+              __INDEX__: index
+            },
+            state.functions
+          );
+          return result === true;
+        });
+
+        return filteredItems || []
+      },
+      MAP: (state, items: any[], filterExpression: string) => {
+        const filteredItems = items?.map((item: any, index) => {
+          return this.evaluate(
+            filterExpression,
+            {
+              ...state.variables,
+              __ITEM__: item,
+              __INDEX__: index
+            },
+            state.functions
+          );
+        });
+
+        return filteredItems || []
+      },
+      SOME: (state, items: any[], filterExpression: string) => {
+        const filteredItems = items?.some((item: any, index) => {
+          return this.evaluate(
+            filterExpression,
+            {
+              ...state.variables,
+              __ITEM__: item,
+              __INDEX__: index
+            },
+            state.functions
+          );
+        });
+
+        return filteredItems;
+      },
+      FIND: (state, items: any[], filterExpression: string) => {
+        const filteredItems = items?.find((item: any, index) => {
+          return this.evaluate(
+            filterExpression,
+            {
+              ...state.variables,
+              __ITEM__: item,
+              __INDEX__: index
+            },
+            state.functions
+          );
+        });
+
+        return filteredItems;
+      },
+      REDUCE: (state, items: any[], filterExpression: string, initial: any) => {
+        const filteredItems = items?.reduce(
+          (curr: any, item: any, index) => {
+            return this.evaluate(
+              filterExpression,
+              {
+                ...state.variables,
+                __CURR__: curr,
+                __ITEM__: item,
+                __INDEX__: index
+              },
+              state.functions
+            );
+          },
+          initial
+        );
+
+        return filteredItems;
+      },
       ...(functions || {})
     };
     this.operators = {
@@ -46,8 +147,7 @@ class ExpressionParser {
   }
 
   private tokenize(expression: string): string[] {
-    const regex = /([-+*/():,<>!=%^\[\]\{\}])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+(?:\.\w+)*(?:\[\d+\])?)/g;
-    return expression.match(regex) || [];
+    return expression.match(REGEX) || [];
   }
 
   private parseNumber(state: ParserState): number {
@@ -151,7 +251,7 @@ class ExpressionParser {
 
   private parseFunction(state: ParserState): any {
     const token = state.currentToken;
-    const func = state.functions[token];
+    const func = state.functions[token]
     state.nextToken();
 
     if (state.currentToken !== '(') {
@@ -175,7 +275,7 @@ class ExpressionParser {
 
     state.nextToken();
 
-    return func(...args);
+    return func(state, ...args);
   }
 
   private parseFactor(state: ParserState): ValueType {
@@ -210,9 +310,9 @@ class ExpressionParser {
     } else if (token.includes('.')) {
       const objectPath = token.split('.');
       let objectValue = state.variables as any
-
       for (const path of objectPath) {
         if (typeof objectValue !== 'object' || objectValue === null || !objectValue.hasOwnProperty(path)) {
+
           throw new Error('Invalid object path');
         } else {
           objectValue = objectValue[path];
@@ -231,9 +331,9 @@ class ExpressionParser {
       state.nextToken();
 
       const factor = this.parseFactor(state);
-
       value = operator(0, factor);
     } else {
+      console.log(token)
       throw new Error('Invalid expression');
     }
 
