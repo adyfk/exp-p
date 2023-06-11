@@ -1,4 +1,5 @@
-export type VariableMap = { [key: string]: number | string | boolean | any[] | object };
+type ValueType = number | string | boolean | any[] | object;
+export type VariableMap = { [key: string]: ValueType };
 export type FunctionMap = { [key: string]: (...args: any[]) => any };
 export type OperatorMap = { [key: string]: (a: any, b: any) => any };
 
@@ -177,8 +178,8 @@ class ExpressionParser {
     return func(...args);
   }
 
-  private parseFactor(state: ParserState): any {
-    let value: number | string | boolean | any[] | object = 0;
+  private parseFactor(state: ParserState): ValueType {
+    let value: ValueType = 0;
     const token = state.currentToken;
 
     if (token === undefined) {
