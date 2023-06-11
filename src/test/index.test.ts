@@ -32,6 +32,8 @@ describe('Example', () => {
     const parser = new ExpressionParser();
     expect(parser.evaluate('true AND false')).toBe(false)
     expect(parser.evaluate('true OR false')).toBe(true)
+    expect(parser.evaluate('!true')).toBe(false)
+    expect(parser.evaluate('!!true')).toBe(true)
   })
   it('array', () => {
     const parser = new ExpressionParser();

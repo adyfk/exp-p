@@ -99,6 +99,18 @@ class ExpressionParser {
     return array;
   }
 
+  private parseUnaryFactor(state: ParserState): any {
+    const token = state.currentToken;
+
+    if (token === '!') {
+      state.nextToken();
+      const factor = this.parseUnaryFactor(state);
+      return !factor;
+    }
+
+    return this.parseFactor(state);
+  }
+
   private parseObject(state: ParserState): object {
     const obj: { [key: string]: any } = {};
     while (true) {
@@ -228,13 +240,13 @@ class ExpressionParser {
   }
 
   private parseTerm(state: ParserState): number {
-    let value = this.parseFactor(state) as number;
+    let value = this.parseUnaryFactor(state) as any;
     while (true) {
       const token = state.currentToken;
       if (token === '*' || token === '/') {
         const operator = token;
         state.nextToken();
-        const factor = this.parseFactor(state);
+        const factor = this.parseUnaryFactor(state);
         if (operator === '*') {
           value *= factor as number;
         } else {
