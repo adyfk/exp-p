@@ -26,10 +26,11 @@
   "author": "Adi Fatkhurozi <ady.fatkhurozi@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "@babel/runtime": "^7.22.3",
     "@babel/cli": "^7.21.5",
     "@babel/preset-env": "^7.22.4",
     "@babel/preset-typescript": "^7.21.5",
+    "@babel/runtime": "^7.22.3",
+    "@types/benchmark": "^2.1.2",
     "@types/jest": "^29.5.2",
     "jest": "^29.5.0",
     "semantic-release": "^21.0.3",
@@ -73,5 +74,7 @@
     "ci": true
   },
   "dependencies": {
+    "benchmark": "^2.1.4",
+    "expressionparser": "^1.1.5"
   }
 }
