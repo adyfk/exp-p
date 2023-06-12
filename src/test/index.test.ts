@@ -1,8 +1,8 @@
-import ExpressionParser, { FunctionMap } from '..'
+import { createParser, FunctionMap } from '../'
 
-describe('Example', () => {
+describe('example', () => {
   it('basic operator', () => {
-    const parser = new ExpressionParser()
+    const parser = createParser()
     expect(parser.evaluate('(2 + 3) * 4 - 4')).toBe(16)
     expect(parser.evaluate('-4 + 5')).toBe(1)
     expect(parser.evaluate('4 <= (5 + 2)')).toBe(true)
@@ -17,36 +17,37 @@ describe('Example', () => {
     // Usage example
     const variables = { x: 5 };
     const functions: FunctionMap = {
-      ADD: (_, a: number, b: number) => a + b,
-      LENGTH: (_, str: string) => str.length,
-      LENGTH_ALL: (_, str1: string, str2: string, str3: string) => [str1.length, str2.length, str3.length],
+      add: (_, a: number, b: number) => a + b,
+      length: (_, str: string) => str.length,
+      length_all: (_, str1: string, str2: string, str3: string) => [str1.length, str2.length, str3.length],
     };
-    const parser = new ExpressionParser({ variables, functions });
-    expect(parser.evaluate('ADD(1 + 1, 5) + x')).toBe(12)
-    expect(parser.evaluate('LENGTH("ADI") + 5', { functions, variables },)).toBe(8)
-    expect(parser.evaluate('LENGTH_ALL("ADI", "FA", "TK")', { variables, functions })).toEqual([3, 2, 2])
+    const parser = createParser({ variables });
+    parser.setFunctions(functions)
+    expect(parser.evaluate('add(1 + 1, 5) + x')).toBe(12)
+    expect(parser.evaluate('length("ADI") + 5', variables)).toBe(8)
+    expect(parser.evaluate('length_all("ADI", "FA", "TK")', variables)).toEqual([3, 2, 2])
   });
   it('string', () => {
-    const parser = new ExpressionParser();
+    const parser = createParser();
     expect(parser.evaluate('"ADI"')).toBe("ADI")
     expect(parser.evaluate('\'ADI\'')).toBe("ADI")
   })
   it('boolean', () => {
-    const parser = new ExpressionParser();
-    expect(parser.evaluate('true AND false')).toBe(false)
-    expect(parser.evaluate('true OR false')).toBe(true)
+    const parser = createParser();
+    expect(parser.evaluate('true and false')).toBe(false)
+    expect(parser.evaluate('true or false')).toBe(true)
     expect(parser.evaluate('!true')).toBe(false)
     expect(parser.evaluate('!!true')).toBe(true)
   })
   it('array', () => {
-    const parser = new ExpressionParser();
+    const parser = createParser();
     expect(parser.evaluate("[1, 2, 3, 4]")).toEqual([1, 2, 3, 4])
     expect(parser.evaluate("[\"2\", 5]")).toEqual(["2", 5])
     expect(parser.evaluate("[2 + 5, 5]")).toEqual([7, 5])
-    expect(parser.evaluate("[5, x]", { variables: { x: 2 } })).toEqual([5, 2])
+    expect(parser.evaluate("[5, x]", { x: 2 })).toEqual([5, 2])
   })
   it('array method', () => {
-    const parser = new ExpressionParser();
+    const parser = createParser();
     const products = [
       { name: 'Product 1', price: 150, quantity: 2 },
       { name: 'Product 2', price: 80, quantity: 0 },
@@ -54,10 +55,8 @@ describe('Example', () => {
       { name: 'Product 4', price: 120, quantity: 1 }
     ];
     expect(
-      parser.evaluate('FILTER(products, "__ITEM__.price > 100 AND __ITEM__.quantity > 0")', {
-        variables: {
-          products
-        }
+      parser.evaluate('filter(products, "_item_.price > 100 and _item_.quantity > 0")', {
+        products
       })
     ).toEqual([
       { name: 'Product 1', price: 150, quantity: 2 },
@@ -66,10 +65,8 @@ describe('Example', () => {
     ])
 
     expect(
-      parser.evaluate('MAP(products, "__ITEM__.name")', {
-        variables: {
-          products
-        }
+      parser.evaluate('map(products, "_item_.name")', {
+        products
       })
     ).toEqual([
       'Product 1',
@@ -79,10 +76,8 @@ describe('Example', () => {
     ])
 
     expect(
-      parser.evaluate('FIND(products, "__ITEM__.price > 0")', {
-        variables: {
-          products
-        }
+      parser.evaluate('find(products, "_item_.price > 0")', {
+        products
       })
     ).toEqual({
       "name": "Product 1",
@@ -91,23 +86,19 @@ describe('Example', () => {
     })
 
     expect(
-      parser.evaluate('SOME(products, "__ITEM__.price == 200")', {
-        variables: {
-          products
-        }
+      parser.evaluate('some(products, "_item_.price == 200")', {
+        products
       })
     ).toBe(true)
 
     expect(
-      parser.evaluate('REDUCE(products, "__CURR__ + __ITEM__.price", 0)', {
-        variables: {
-          products
-        }
+      parser.evaluate('reduce(products, "_curr_ + _item_.price", 0)', {
+        products
       })
     ).toBe(550)
   })
   it('object', () => {
-    const parser = new ExpressionParser();
+    const parser = createParser();
     expect(parser.evaluate("{ name: 'ADI', age: 20 }")).toEqual({
       name: "ADI",
       age: 20
@@ -116,9 +107,9 @@ describe('Example', () => {
       name: "ADI",
       age: 7
     })
-    expect(parser.evaluate("object.name", { variables: { object: { name: 'ADI' } } })).toEqual('ADI')
-    expect(parser.evaluate("object.name", { variables: { object: { name: 'ADI' } } })).toEqual('ADI')
-    expect(parser.evaluate("object.0.name", { variables: { object: [{ name: 'ADI' }] } })).toEqual('ADI')
-    expect(parser.evaluate("object.0.object.0.name", { variables: { object: [{ name: 'ADI', object: [{ name: "ADI" }] }] } })).toEqual('ADI')
+    expect(parser.evaluate("object.name", { object: { name: 'ADI' } })).toEqual('ADI')
+    expect(parser.evaluate("object.name", { object: { name: 'ADI' } })).toEqual('ADI')
+    expect(parser.evaluate("object.0.name", { object: [{ name: 'ADI' }] })).toEqual('ADI')
+    expect(parser.evaluate("object.0.object.0.name", { object: [{ name: 'ADI', object: [{ name: "ADI" }] }] })).toEqual('ADI')
   })
 });
