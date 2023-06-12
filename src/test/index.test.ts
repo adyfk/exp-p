@@ -31,6 +31,8 @@ describe('example', () => {
     const parser = createParser();
     expect(parser.evaluate('"ADI"')).toBe("ADI")
     expect(parser.evaluate('\'ADI\'')).toBe("ADI")
+    expect(parser.evaluate('regex("ddd212sdf","\\d\\w\\d")')).toBe(true)
+    expect(parser.evaluate('regex("ddd212sdf","\\d\\w\\d","y")')).toBe(false)
   })
   it('boolean', () => {
     const parser = createParser();

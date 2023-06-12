@@ -25,6 +25,18 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     '^': (a, b) => Math.pow(a, b)
   }
   const functions: FunctionMap = {
+    // DATA TYPE
+    is_string: (_, value: any) => typeof value === 'string',
+    is_boolean: (_, value: any) => typeof value === 'boolean',
+    is_array: (_, value: any) => Array.isArray(value),
+    is_object: (_, value: any) => typeof value === 'object' && value !== null,
+    is_number: (_, value: any) => {
+      try {
+        return !Number.isNaN(+value);
+      } catch (error) {
+        return false
+      }
+    },
     // NUMBER
     ceil: (_, value: number) => Math.ceil(value),
     round: (_, value: number) => Math.round(value),
@@ -32,12 +44,16 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     floor: (_, value: number) => Math.floor(value),
     abs: (_, value: number) => Math.abs(value),
     // STRING
-    split: (_, arr: string, arg: string) => arr.split(arg),
+    split: (_, value: string, arg: string) => value.split(arg),
+    upper: (_, value: string) => value.toUpperCase(),
+    lower: (_, value: string) => value.toLowerCase(),
+    regex: (_, value: any, regex: string, flags?: string) => new RegExp(regex, flags).test(value),
     // CONDITION
     if: (_, condition: boolean, truthy: any, falsy) => {
       return (condition) ? truthy : falsy
     },
     // ARRAY
+    includes: (_, value, ...args) => args.includes(value),
     min: (_, ...args) => Math.min(...args),
     max: (_, ...args) => Math.max(...args),
     sum: (_, arr) => arr.reduce((prev: number, curr: number) => prev + curr, 0),
