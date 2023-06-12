@@ -21,10 +21,10 @@ describe('Example', () => {
       LENGTH: (_, str: string) => str.length,
       LENGTH_ALL: (_, str1: string, str2: string, str3: string) => [str1.length, str2.length, str3.length],
     };
-    const parser = new ExpressionParser(variables, functions);
+    const parser = new ExpressionParser({ variables, functions });
     expect(parser.evaluate('ADD(1 + 1, 5) + x')).toBe(12)
-    expect(parser.evaluate('LENGTH("ADI") + 5', variables, functions)).toBe(8)
-    expect(parser.evaluate('LENGTH_ALL("ADI", "FA", "TK")', variables, functions)).toEqual([3, 2, 2])
+    expect(parser.evaluate('LENGTH("ADI") + 5', { functions, variables },)).toBe(8)
+    expect(parser.evaluate('LENGTH_ALL("ADI", "FA", "TK")', { variables, functions })).toEqual([3, 2, 2])
   });
   it('string', () => {
     const parser = new ExpressionParser();
@@ -43,7 +43,7 @@ describe('Example', () => {
     expect(parser.evaluate("[1, 2, 3, 4]")).toEqual([1, 2, 3, 4])
     expect(parser.evaluate("[\"2\", 5]")).toEqual(["2", 5])
     expect(parser.evaluate("[2 + 5, 5]")).toEqual([7, 5])
-    expect(parser.evaluate("[5, x]", { x: 2 })).toEqual([5, 2])
+    expect(parser.evaluate("[5, x]", { variables: { x: 2 } })).toEqual([5, 2])
   })
   it('array method', () => {
     const parser = new ExpressionParser();
@@ -55,7 +55,9 @@ describe('Example', () => {
     ];
     expect(
       parser.evaluate('FILTER(products, "__ITEM__.price > 100 AND __ITEM__.quantity > 0")', {
-        products
+        variables: {
+          products
+        }
       })
     ).toEqual([
       { name: 'Product 1', price: 150, quantity: 2 },
@@ -65,7 +67,9 @@ describe('Example', () => {
 
     expect(
       parser.evaluate('MAP(products, "__ITEM__.name")', {
-        products
+        variables: {
+          products
+        }
       })
     ).toEqual([
       'Product 1',
@@ -76,7 +80,9 @@ describe('Example', () => {
 
     expect(
       parser.evaluate('FIND(products, "__ITEM__.price > 0")', {
-        products
+        variables: {
+          products
+        }
       })
     ).toEqual({
       "name": "Product 1",
@@ -86,10 +92,19 @@ describe('Example', () => {
 
     expect(
       parser.evaluate('SOME(products, "__ITEM__.price == 200")', {
-        products
+        variables: {
+          products
+        }
       })
     ).toBe(true)
 
+    expect(
+      parser.evaluate('REDUCE(products, "__CURR__ + __ITEM__.price", 0)', {
+        variables: {
+          products
+        }
+      })
+    ).toBe(550)
   })
   it('object', () => {
     const parser = new ExpressionParser();
@@ -101,9 +116,9 @@ describe('Example', () => {
       name: "ADI",
       age: 7
     })
-    expect(parser.evaluate("object.name", { object: { name: 'ADI' } })).toEqual('ADI')
-    expect(parser.evaluate("object.name", { object: { name: 'ADI' } })).toEqual('ADI')
-    expect(parser.evaluate("object.0.name", { object: [{ name: 'ADI' }] })).toEqual('ADI')
-    expect(parser.evaluate("object.0.object.0.name", { object: [{ name: 'ADI', object: [{ name: "ADI" }] }] })).toEqual('ADI')
+    expect(parser.evaluate("object.name", { variables: { object: { name: 'ADI' } } })).toEqual('ADI')
+    expect(parser.evaluate("object.name", { variables: { object: { name: 'ADI' } } })).toEqual('ADI')
+    expect(parser.evaluate("object.0.name", { variables: { object: [{ name: 'ADI' }] } })).toEqual('ADI')
+    expect(parser.evaluate("object.0.object.0.name", { variables: { object: [{ name: 'ADI', object: [{ name: "ADI" }] }] } })).toEqual('ADI')
   })
 });

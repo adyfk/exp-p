@@ -14,14 +14,45 @@ export type VariableMap = { [key: string]: ValueType };
 export type FunctionMap = { [key: string]: (state: ParserState, ...args: any[]) => any };
 export type OperatorMap = { [key: string]: (a: any, b: any) => any };
 
-const REGEX = /([<>]=|==|!=)|([-+*/():,<>!=%^\[\]\{\}])|\b(?:\d+(\.\d+)?)|(?:"[^"]*")|(?:'[^']*')|(?:\w+(?:\.\w+)*(?:\[\d+\])?)/g;
+const comparisonOperatorRegex = /([<>]=|==|!=)/;
+const specialCharacterRegex = /([-+*/():,<>!=%^\[\]\{\}])/;
+const numberRegex = /\b(?:\d+(\.\d+)?)/;
+const stringRegex = /(?:"[^"]*")|(?:'[^']*')/;
+const identifierRegex = /(?:\w+(?:\.\w+)*(?:\[\d+\])?)/;
 
 class ExpressionParser {
   private variables: VariableMap;
   private functions: FunctionMap;
   private operators: OperatorMap;
+  private regex: RegExp;
 
-  constructor(variables?: VariableMap, functions?: FunctionMap, operators?: OperatorMap) {
+  constructor({
+    variables,
+    functions,
+    operators,
+    regex
+  }: {
+    variables?: VariableMap,
+    functions?: FunctionMap,
+    operators?: OperatorMap,
+    regex?: RegExp
+  } = {}) {
+    let regexString = comparisonOperatorRegex.source +
+      '|' +
+      specialCharacterRegex.source +
+      '|' +
+      numberRegex.source +
+      '|' +
+      stringRegex.source +
+      '|' +
+      identifierRegex.source;
+
+    if (regex) {
+      regexString += '|' + regex;
+    }
+    this.regex = new RegExp(regexString,
+      'g'
+    );
     this.variables = {
       PI: Math.PI,
       ...(variables || {})
@@ -50,11 +81,14 @@ class ExpressionParser {
           const result = this.evaluate(
             filterExpression,
             {
-              ...state.variables,
-              __ITEM__: item,
-              __INDEX__: index
-            },
-            state.functions
+              functions: state.functions,
+              operators: state.operators,
+              variables: {
+                ...state.variables,
+                __ITEM__: item,
+                __INDEX__: index
+              },
+            }
           );
           return result === true;
         });
@@ -66,11 +100,14 @@ class ExpressionParser {
           return this.evaluate(
             filterExpression,
             {
-              ...state.variables,
-              __ITEM__: item,
-              __INDEX__: index
-            },
-            state.functions
+              functions: state.functions,
+              operators: state.operators,
+              variables: {
+                ...state.variables,
+                __ITEM__: item,
+                __INDEX__: index
+              }
+            }
           );
         });
 
@@ -81,11 +118,14 @@ class ExpressionParser {
           return this.evaluate(
             filterExpression,
             {
-              ...state.variables,
-              __ITEM__: item,
-              __INDEX__: index
+              variables: {
+                ...state.variables,
+                __ITEM__: item,
+                __INDEX__: index
+              },
+              functions: state.functions
             },
-            state.functions
+
           );
         });
 
@@ -96,11 +136,14 @@ class ExpressionParser {
           return this.evaluate(
             filterExpression,
             {
-              ...state.variables,
-              __ITEM__: item,
-              __INDEX__: index
+              functions: state.functions,
+              operators: state.operators,
+              variables: {
+                ...state.variables,
+                __ITEM__: item,
+                __INDEX__: index
+              }
             },
-            state.functions
           );
         });
 
@@ -112,12 +155,15 @@ class ExpressionParser {
             return this.evaluate(
               filterExpression,
               {
-                ...state.variables,
-                __CURR__: curr,
-                __ITEM__: item,
-                __INDEX__: index
-              },
-              state.functions
+                functions: state.functions,
+                operators: state.operators,
+                variables: {
+                  ...state.variables,
+                  __CURR__: curr,
+                  __ITEM__: item,
+                  __INDEX__: index
+                }
+              }
             );
           },
           initial
@@ -147,7 +193,7 @@ class ExpressionParser {
   }
 
   private tokenize(expression: string): string[] {
-    return expression.match(REGEX) || [];
+    return expression.match(this.regex) || [];
   }
 
   private parseNumber(state: ParserState): number {
@@ -381,13 +427,19 @@ class ExpressionParser {
 
   public evaluate(
     expression: string,
-    tempVariables?: VariableMap,
-    tempFunctions?: FunctionMap,
-    tempOperators?: OperatorMap,
+    {
+      variables,
+      functions,
+      operators,
+    }: {
+      variables?: VariableMap,
+      functions?: FunctionMap,
+      operators?: OperatorMap,
+    } = {}
   ): any {
-    const variables = { ...this.variables, ...(tempVariables || {}) };
-    const functions = { ...this.functions, ...(tempFunctions || {}) };
-    const operators = { ...this.operators, ...(tempOperators || {}) };
+    const tempVariables = { ...this.variables, ...(variables || {}) };
+    const tempFunctions = { ...this.functions, ...(functions || {}) };
+    const tempOperators = { ...this.operators, ...(operators || {}) };
 
     const state: ParserState = {
       tokens: this.tokenize(expression),
@@ -398,9 +450,9 @@ class ExpressionParser {
       nextToken() {
         this.currentTokenIndex++;
       },
-      variables,
-      functions,
-      operators
+      variables: tempVariables,
+      functions: tempFunctions,
+      operators: tempOperators
     };
 
     const result = this.parseExpression(state);
