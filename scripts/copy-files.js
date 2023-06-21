@@ -35,7 +35,9 @@ async function createModulePackages({ from, to }) {
         fse.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2)),
       ]);
 
-      const manifestErrorMessages = [];
+      const manifestErrorMessages = [
+        'luxon'
+      ];
       if (!typingsEntryExist) {
         manifestErrorMessages.push(
           `'types' entry '${packageJson.types}' does not exist`,

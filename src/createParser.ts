@@ -1,6 +1,8 @@
 import ExpressionParser, { ExpressionParserConstructor, FunctionMap, OperatorMap } from "./ExpressionParser"
+import { DateTime } from 'luxon'
 
 export function createParser(props: ExpressionParserConstructor = {}) {
+  const luxonConfigToISO = props.luxon?.toISO
   const parser = new ExpressionParser({
     ...props,
     variables: {
@@ -25,7 +27,7 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     '^': (a, b) => Math.pow(a, b)
   }
   const functions: FunctionMap = {
-    // DATA TYPE
+    // DATATYPE ==================================================================================
     is_string: (_, value: any) => typeof value === 'string',
     is_boolean: (_, value: any) => typeof value === 'boolean',
     is_array: (_, value: any) => Array.isArray(value),
@@ -37,27 +39,40 @@ export function createParser(props: ExpressionParserConstructor = {}) {
         return false
       }
     },
-    // NUMBER
+    // NUMBER ==================================================================================
     ceil: (_, value: number) => Math.ceil(value),
     round: (_, value: number) => Math.round(value),
     random: () => Math.random(),
     floor: (_, value: number) => Math.floor(value),
     abs: (_, value: number) => Math.abs(value),
-    // STRING
+    // STRING ==================================================================================
     split: (_, value: string, arg: string) => value.split(arg),
     upper: (_, value: string) => value.toUpperCase(),
     lower: (_, value: string) => value.toLowerCase(),
     regex: (_, value: any, regex: string, flags?: string) => new RegExp(regex, flags).test(value),
-    // CONDITION
+    // DATE ==================================================================================
+    date: (_, value: string,) => DateTime.fromISO(value).toISO(luxonConfigToISO) || DateTime.now().toISO(luxonConfigToISO),
+    date_day: (_, value: string,) => DateTime.fromISO(value).day || DateTime.now().day,
+    date_month: (_, value: string,) => DateTime.fromISO(value).month || DateTime.now().month,
+    date_year: (_, value: string,) => DateTime.fromISO(value).year || DateTime.now().year,
+    date_hour: (_, value: string,) => DateTime.fromISO(value).hour || DateTime.now().hour,
+    date_minute: (_, value: string,) => DateTime.fromISO(value).minute,
+    date_format: (_, value: string, format: string) => DateTime.fromISO(value).toFormat(format).toString(),
+    date_in_format: (_, value: string, format: string) => DateTime.fromFormat(value, format).toISO(luxonConfigToISO),
+    date_in_millis: (_, value: number) => DateTime.fromMillis(value).toISO(),
+    date_millis: (_, value: string) => DateTime.fromISO(value).toMillis(),
+    date_plus: (_, value: string) => DateTime.fromISO(value),
+
+    // CONDITION ==================================================================================
     if: (_, condition: boolean, truthy: any, falsy) => {
       return (condition) ? truthy : falsy
     },
-    // ARRAY
-    includes: (_, value, ...args) => args.includes(value),
+    // ARRAY ==================================================================================
+    includes: (_, value, arr: any[]) => arr.includes(value),
     min: (_, ...args) => Math.min(...args),
     max: (_, ...args) => Math.max(...args),
     sum: (_, arr) => arr.reduce((prev: number, curr: number) => prev + curr, 0),
-    length: (_, value) => value.length,
+    length: (_, value) => value?.length || 0,
     join: (_, arr: string[], arg: string) => arr.join(arg),
     filter: (state, items: any[], filterExpression: string) => {
       const filteredItems = items?.filter((item: any, index) => {
@@ -134,7 +149,7 @@ export function createParser(props: ExpressionParserConstructor = {}) {
       );
 
       return filteredItems;
-    }
+    },
   }
 
   parser.setFunctions(functions)

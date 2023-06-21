@@ -1,3 +1,4 @@
+import { ToISOTimeOptions } from "luxon";
 
 export interface ParserState {
   tokens: string[];
@@ -13,8 +14,12 @@ export type FunctionMap = { [key: string]: (state: ParserState, ...args: any[]) 
 export type OperatorMap = { [key: string]: (a: any, b: any) => any };
 export type ExpressionParserConstructor = {
   variables?: VariableMap,
-  regex?: RegExp
+  regex?: RegExp,
+  luxon?: {
+    toISO?: ToISOTimeOptions
+  }
 }
+
 
 const comparisonOperatorRegex = /([<>]=|==|!=)/;
 const specialCharacterRegex = /([-+*/():,<>!=%^\[\]\{\}])/;
