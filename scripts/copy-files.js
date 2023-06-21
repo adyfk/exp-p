@@ -35,9 +35,7 @@ async function createModulePackages({ from, to }) {
         fse.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2)),
       ]);
 
-      const manifestErrorMessages = [
-        'luxon'
-      ];
+      const manifestErrorMessages = [];
       if (!typingsEntryExist) {
         manifestErrorMessages.push(
           `'types' entry '${packageJson.types}' does not exist`,
@@ -67,6 +65,7 @@ async function createModulePackages({ from, to }) {
 
 // add package here
 const packageIncludes = [
+  'luxon'
 ];
 
 async function includeFileInBuild(file) {
