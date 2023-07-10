@@ -45,6 +45,8 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     random: () => Math.random(),
     floor: (_, value: number) => Math.floor(value),
     abs: (_, value: number) => Math.abs(value),
+    precision: (_, value: number, precision: number) => +value.toPrecision(precision),
+    fixed: (_, value: number, fractionDigits: number) => +value.toFixed(fractionDigits),
     // STRING ==================================================================================
     split: (_, value: string, arg: string) => value.split(arg),
     upper: (_, value: string) => value.toUpperCase(),
