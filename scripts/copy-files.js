@@ -65,7 +65,7 @@ async function createModulePackages({ from, to }) {
 
 // add package here
 const packageIncludes = [
-  'luxon'
+  'moment'
 ];
 
 async function includeFileInBuild(file) {

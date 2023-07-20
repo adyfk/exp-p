@@ -1,5 +1,3 @@
-import { ToISOTimeOptions } from "luxon";
-
 export interface ParserState {
   tokens: string[];
   currentTokenIndex: number;
@@ -15,9 +13,6 @@ export type OperatorMap = { [key: string]: (a: any, b: any) => any };
 export type ExpressionParserConstructor = {
   variables?: VariableMap,
   regex?: RegExp,
-  luxon?: {
-    toISO?: ToISOTimeOptions
-  }
 }
 
 
@@ -296,7 +291,6 @@ export class ExpressionParser {
     variables?: VariableMap,
   ): any {
     const tempVariables = { ...this.variables, ...(variables || {}) };
-
     const state: ParserState = {
       tokens: this.tokenize(expression),
       currentTokenIndex: 0,

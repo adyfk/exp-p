@@ -1,8 +1,9 @@
 import ExpressionParser, { ExpressionParserConstructor, FunctionMap, OperatorMap } from "./ExpressionParser"
-import { DateTime } from 'luxon'
+import moment from 'moment'
+
+type Unit = "year" | "years" | "y" | "month" | "months" | "M" | "week" | "weeks" | "w" | "day" | "days" | "d" | "hour" | "hours" | "h" | "minute" | "minutes" | "m" | "second" | "seconds" | "s" | "millisecond" | "milliseconds" | "ms"
 
 export function createParser(props: ExpressionParserConstructor = {}) {
-  const luxonConfigToISO = props.luxon?.toISO
   const parser = new ExpressionParser({
     ...props,
     variables: {
@@ -53,17 +54,18 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     lower: (_, value: string) => value.toLowerCase(),
     regex: (_, value: any, regex: string, flags?: string) => new RegExp(regex, flags).test(value),
     // DATE ==================================================================================
-    date: (_, value: string,) => DateTime.fromISO(value).toISO(luxonConfigToISO) || DateTime.now().toISO(luxonConfigToISO),
-    date_day: (_, value: string,) => DateTime.fromISO(value).day || DateTime.now().day,
-    date_month: (_, value: string,) => DateTime.fromISO(value).month || DateTime.now().month,
-    date_year: (_, value: string,) => DateTime.fromISO(value).year || DateTime.now().year,
-    date_hour: (_, value: string,) => DateTime.fromISO(value).hour || DateTime.now().hour,
-    date_minute: (_, value: string,) => DateTime.fromISO(value).minute,
-    date_format: (_, value: string, format: string) => DateTime.fromISO(value).toFormat(format).toString(),
-    date_in_format: (_, value: string, format: string) => DateTime.fromFormat(value, format).toISO(luxonConfigToISO),
-    date_in_millis: (_, value: number) => DateTime.fromMillis(value).toISO(),
-    date_millis: (_, value: string) => DateTime.fromISO(value).toMillis(),
-    date_plus: (_, value: string) => DateTime.fromISO(value),
+    date: (_, date: string) => date ? moment(date).toISOString() : moment().toISOString(),
+    date_day: (_, date: string) => date ? moment(date).date() : moment().date(),
+    date_month: (_, date: string) => date ? moment(date).month() + 1 : moment().month() + 1,
+    date_year: (_, date: string) => date ? moment(date).year() : moment().year(),
+    date_hour: (_, date: string) => date ? moment(date).hour() : moment().hour(),
+    date_minute: (_, date: string) => date ? moment(date).minute() : moment().minute(),
+    date_format: (_, format: string, date: string) => date ? moment(date).format(format).toString() : moment().format(format).toString(),
+    date_in_format: (_, format: string, date: string) => date ? moment(date, format).toISOString() : moment().toISOString(),
+    date_in_millis: (_, date: number) => moment(date).toISOString(),
+    date_millis: (_, date: string) => date ? moment(date).valueOf() : moment().valueOf(),
+    date_plus: (_, amount: number, unit: Unit, date: string) => date ? moment(date).add(amount, unit) : moment().add(amount, unit),
+    date_minus: (_, amount: number, unit: Unit, date: string) => date ? moment(date).subtract(amount, unit) : moment().subtract(amount, unit),
 
     // CONDITION ==================================================================================
     if: (_, condition: boolean, truthy: any, falsy) => {

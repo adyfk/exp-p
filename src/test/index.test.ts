@@ -1,12 +1,9 @@
-import { DateTime } from 'luxon';
+import moment from 'moment'
 import { createParser, FunctionMap } from '../'
 
 describe('example', () => {
   it('basic operator', () => {
     const parser = createParser({
-      luxon: {
-        toISO: {}
-      }
     })
     expect(parser.evaluate('(2 + 3) * 4 - 4')).toBe(16)
     expect(parser.evaluate('-4 + 5')).toBe(1)
@@ -122,14 +119,18 @@ describe('example', () => {
   it('date', () => {
     const parser = createParser();
 
-    // expect( parser.evaluate(`date()`)).toBe(DateTime.now().toISO())
-    // expect( parser.evaluate(`date("2020-01-01")`)).toBe('2020-01-01T00:00:00.000+07:00')
-    // expect(parser.evaluate(`date_day(date("2020-01-01"))`)).toBe(1)
-    // expect(parser.evaluate(`date_month(date("2020-01-01"))`)).toBe(1)
-    // expect(parser.evaluate(`date_year(date("2020-01-01"))`)).toBe(2020)
-    // expect(parser.evaluate(`date_format("2020-01-01", "dd-MM-yyyy")`)).toBe("01-01-2020")
-    // expect(parser.evaluate(`date_in_format("2020-01-01", "yyyy-MM-dd")`)).toBe('2020-01-01T00:00:00.000+07:00')
-    // expect(parser.evaluate(`date_in_millis(${DateTime.fromISO("2020-01-01").toMillis()})`)).toBe('2020-01-01T00:00:00.000+07:00')
-    // expect(parser.evaluate(`date_millis("2020-01-01")`)).toBe(1577811600000)
+    // expect(parser.evaluate(`date()`)).toBe(moment().toISOString())
+    expect(parser.evaluate(`date("2020-01-01")`)).toBe('2019-12-31T17:00:00.000Z')
+    expect(parser.evaluate(`date_day(date("2020-01-01"))`)).toBe(1)
+    expect(parser.evaluate(`date_month(date("2020-01-01"))`)).toBe(1)
+    expect(parser.evaluate(`date_year(date("2020-01-01"))`)).toBe(2020)
+    expect(parser.evaluate(`date_format("DD-MM-YYYY", "2020-01-01")`)).toBe("01-01-2020")
+    expect(parser.evaluate(`date_in_format("YYYY-MM-DD", "2020-01-01")`)).toBe('2019-12-31T17:00:00.000Z')
+    expect(parser.evaluate(`date_in_millis(${moment("2020/01/01", 'YYYY/MM/DD').valueOf()})`)).toBe('2019-12-31T17:00:00.000Z')
+    expect(parser.evaluate(`date_millis("2020-01-01")`)).toBe(1577811600000)
+    expect(parser.evaluate(`date_format("DD-MM-YYYY", date_plus(1, "day", "2020-01-05"))`)).toBe("06-01-2020")
+    expect(parser.evaluate(`date_format("DD-MM-YYYY", date_plus(-1, "day", "2020-01-05"))`)).toBe("04-01-2020")
+    expect(parser.evaluate(`date_format("DD-MM-YYYY", date_minus(1, "day", "2020-01-05"))`)).toBe("04-01-2020")
+    expect(parser.evaluate(`date_format("DD-MM-YYYY", date_minus(-1, "day", "2020-01-05"))`)).toBe("06-01-2020")
   })
 });
