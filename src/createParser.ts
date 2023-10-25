@@ -166,6 +166,46 @@ export function createParser(props: ExpressionParserConstructor = {}) {
 
       return filteredItems;
     },
+    unique: (state, items: any[], filterExpression?: string) => {
+      const filteredItems = items?.reduce(
+        (uniqueList: any[], item: any, index) => {
+          if (!filterExpression) {
+            if (uniqueList.includes(item)) return uniqueList;
+            return [...uniqueList, item]
+          } else {
+            const hasIncluded = uniqueList.some((uniqueItem) => {
+              const uniqueItemValue = parser.evaluate(
+                filterExpression,
+                {
+                  ...state.variables,
+                  _item_: uniqueItem,
+                  _index_: index
+                }
+              )
+              const currValue = parser.evaluate(
+                filterExpression,
+                {
+                  ...state.variables,
+                  _item_: item,
+                  _index_: index
+                }
+              )
+              return uniqueItemValue === currValue
+            })
+
+            if (hasIncluded) {
+              return uniqueList;
+            } else {
+              return [...uniqueList, item]
+            }
+          }
+        },
+        []
+      );
+
+      return filteredItems;
+
+    }
   }
 
   parser.setFunctions(functions)

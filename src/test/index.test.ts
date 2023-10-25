@@ -52,12 +52,31 @@ describe('example', () => {
   })
   it('array method', () => {
     const parser = createParser();
+
+    expect(
+      parser.evaluate('unique(products)', {
+        products: [1, 1, 4, 5, 6, 6, 7, 7, 8, 8]
+      })
+    ).toEqual([1, 4, 5, 6, 7, 8])
+
     const products = [
       { name: 'Product 1', price: 150, quantity: 2 },
       { name: 'Product 2', price: 80, quantity: 0 },
       { name: 'Product 3', price: 200, quantity: 5 },
+      { name: 'Product 4', price: 120, quantity: 1 },
       { name: 'Product 4', price: 120, quantity: 1 }
     ];
+    expect(
+      parser.evaluate('unique(products, "_item_.name")', {
+        products
+      })
+    ).toEqual([
+      { name: 'Product 1', price: 150, quantity: 2 },
+      { name: 'Product 2', price: 80, quantity: 0 },
+      { name: 'Product 3', price: 200, quantity: 5 },
+      { name: 'Product 4', price: 120, quantity: 1 },
+    ])
+
     expect(
       parser.evaluate('filter(products, "_item_.price > 100 and _item_.quantity > 0")', {
         products
@@ -65,7 +84,8 @@ describe('example', () => {
     ).toEqual([
       { name: 'Product 1', price: 150, quantity: 2 },
       { name: 'Product 3', price: 200, quantity: 5 },
-      { name: 'Product 4', price: 120, quantity: 1 }
+      { name: 'Product 4', price: 120, quantity: 1 },
+      { name: 'Product 4', price: 120, quantity: 1 },
     ])
 
     expect(
@@ -76,6 +96,7 @@ describe('example', () => {
       'Product 1',
       'Product 2',
       'Product 3',
+      'Product 4',
       'Product 4',
     ])
 
@@ -99,7 +120,7 @@ describe('example', () => {
       parser.evaluate('reduce(products, "_curr_ + _item_.price", 0)', {
         products
       })
-    ).toBe(550)
+    ).toBe(670)
   })
   it('object', () => {
     const parser = createParser();
