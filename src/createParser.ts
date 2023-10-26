@@ -72,7 +72,7 @@ export function createParser(props: ExpressionParserConstructor = {}) {
       return (condition) ? truthy : falsy
     },
     // ARRAY ==================================================================================
-    includes: (_, value: any, arr: any[]) => arr.includes(value),
+    includes: (_, arr: any[], value: any,) => arr.includes(value),
     min: (_, ...args) => Math.min(...args),
     max: (_, ...args) => Math.max(...args),
     sum: (state, arr, filterExpression: string) => arr.reduce((prev: number, curr: number, index: number) => {
