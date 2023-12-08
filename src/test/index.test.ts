@@ -1,4 +1,3 @@
-import moment from 'moment'
 import { createParser, FunctionMap } from '../'
 
 describe('example', () => {
@@ -136,6 +135,14 @@ describe('example', () => {
     expect(parser.evaluate("object.name", { object: { name: 'ADI' } })).toEqual('ADI')
     expect(parser.evaluate("object.0.name", { object: [{ name: 'ADI' }] })).toEqual('ADI')
     expect(parser.evaluate("object.0.object.0.name", { object: [{ name: 'ADI', object: [{ name: "ADI" }] }] })).toEqual('ADI')
+    expect(parser.evaluate("{ name: 'ADI', age: 20, ...z, student: false }", { z: { address: 'jl indonesia' } })).toEqual(
+      {
+        "address": "jl indonesia",
+        "age": 20,
+        "name": "ADI",
+        "student": false,
+      }
+    )
   })
   it('date', () => {
     const parser = createParser();

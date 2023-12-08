@@ -71,7 +71,9 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     if: (_, condition: boolean, truthy: any, falsy) => {
       return (condition) ? truthy : falsy
     },
-    // ARRAY ==================================================================================
+    // OBJECT ==================================================================================
+    asign: (_, source: Object, target: Object) => Object.assign(source, target),
+    // ARRAY ===================================================================================
     includes: (_, arr: any[], value: any,) => arr.includes(value),
     min: (_, ...args) => Math.min(...args),
     max: (_, ...args) => Math.max(...args),

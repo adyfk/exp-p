@@ -20,7 +20,7 @@ const comparisonOperatorRegex = /([<>]=|==|!=)/;
 const specialCharacterRegex = /([-+*/():,<>!=%^\[\]\{\}])/;
 const numberRegex = /\b(?:\d+(\.\d+)?)/;
 const stringRegex = /(?:"[^"]*")|(?:'[^']*')/;
-const identifierRegex = /(?:\w+(?:\.\w+)*(?:\[\d+\])?)/;
+const identifierRegex = /(?:\w+(?:\.\w+)*(?:\[\d+\])*|(?:\.\.\.\w+))/
 
 export class ExpressionParser {
   private variables: VariableMap = {};
@@ -127,16 +127,21 @@ export class ExpressionParser {
       if (typeof key !== 'string') {
         throw new Error('Invalid object literal');
       }
-      state.nextToken();
-      if (state.currentToken !== ':') {
-        throw new Error('Invalid object literal');
+
+      if (key.includes('...')) {
+        state.currentToken = state.currentToken.replace('...', '')
+        Object.assign(obj, this.parseExpression(state))
+      } else {
+        state.nextToken();
+        if (state.currentToken !== ':') {
+          throw new Error('Invalid object literal');
+        }
+
+        state.nextToken();
+
+        const value = this.parseExpression(state);
+        obj[key] = value;
       }
-
-      state.nextToken();
-
-      const value = this.parseExpression(state);
-      obj[key] = value;
-
       if (state.currentToken as any === '}') {
         break;
       }
@@ -296,6 +301,9 @@ export class ExpressionParser {
       currentTokenIndex: 0,
       get currentToken() {
         return this.tokens[this.currentTokenIndex];
+      },
+      set currentToken(value) {
+        this.tokens[this.currentTokenIndex] = value
       },
       nextToken() {
         this.currentTokenIndex++;
