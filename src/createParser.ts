@@ -72,7 +72,7 @@ export function createParser(props: ExpressionParserConstructor = {}) {
       return (condition) ? truthy : falsy
     },
     // OBJECT ==================================================================================
-    asign: (_, source: Object, target: Object) => Object.assign(source, target),
+    assign: (_, source: Object, target: Object) => Object.assign(source, target),
     // ARRAY ===================================================================================
     includes: (_, arr: any[], value: any,) => arr.includes(value),
     min: (_, ...args) => Math.min(...args),
