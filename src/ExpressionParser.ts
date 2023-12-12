@@ -224,11 +224,9 @@ export class ExpressionParser {
       const objectPath = token.split('.');
       let objectValue = state.variables as any
       for (const path of objectPath) {
+        objectValue = objectValue?.[path];
         if (typeof objectValue !== 'object' || objectValue === null || !objectValue.hasOwnProperty(path)) {
-
-          throw new Error('Invalid object path');
-        } else {
-          objectValue = objectValue[path];
+          break;
         }
       }
 
