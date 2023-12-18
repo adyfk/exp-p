@@ -234,9 +234,6 @@ export class ExpressionParser {
 
       value = objectValue;
       state.nextToken();
-    } else if (state.variables.hasOwnProperty(token)) {
-      value = state.variables[token];
-      state.nextToken();
     } else if (this.functions.hasOwnProperty(token)) {
       value = this.parseFunction(state);
     } else if (this.operators.hasOwnProperty(token)) {
@@ -246,7 +243,9 @@ export class ExpressionParser {
       const factor = this.parseFactor(state);
       value = operator(0, factor);
     } else {
-      throw new Error('Invalid expression');
+      // } else if (state.variables.hasOwnProperty(token)) {
+      value = state.variables[token];
+      state.nextToken();
     }
 
     return value;
@@ -310,7 +309,6 @@ export class ExpressionParser {
       },
       variables: tempVariables,
     };
-
     const result = this.parseExpression(state);
 
     if (state.currentToken !== undefined) {

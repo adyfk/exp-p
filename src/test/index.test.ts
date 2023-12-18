@@ -1,6 +1,7 @@
 import { createParser, FunctionMap } from '../'
 
 describe('example', () => {
+
   it('basic operator', () => {
     const parser = createParser({
     })
