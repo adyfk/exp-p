@@ -66,6 +66,8 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     date_millis: (_, date: string) => date ? moment(date).valueOf() : moment().valueOf(),
     date_plus: (_, amount: number, unit: Unit, date: string) => date ? moment(date).add(amount, unit).toISOString() : moment().add(amount, unit).toISOString(),
     date_minus: (_, amount: number, unit: Unit, date: string) => date ? moment(date).subtract(amount, unit).toISOString() : moment().subtract(amount, unit).toISOString(),
+    date_is_before: (_, date1: string, date2: string) => moment(date1).isBefore(date2),
+    date_is_after: (_, date1: string, date2: string) => moment(date1).isAfter(date2),
 
     // CONDITION ==================================================================================
     if: (_, condition: boolean, truthy: any, falsy) => {
