@@ -79,29 +79,29 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     includes: (_, arr: any[], value: any,) => arr.includes(value),
     min: (_, ...args) => Math.min(...args),
     max: (_, ...args) => Math.max(...args),
-    sum: (state, arr, filterExpression: string) => arr.reduce((prev: number, curr: number, index: number) => {
+    sum: (state, arr, filterExpression: string, key = ['_item_', '_index_']) => arr.reduce((prev: number, curr: number, index: number) => {
       if (!filterExpression) return prev + curr;
 
       const result = parser.evaluate(
         filterExpression,
         {
           ...state.variables,
-          _item_: curr,
-          _index_: index
+          [key[0]]: curr,
+          [key[1]]: index
         },
       );
       return prev + result;
     }, 0),
     length: (_, value) => value?.length || 0,
     join: (_, arr: string[], arg: string) => arr.join(arg),
-    filter: (state, items: any[], filterExpression: string) => {
+    filter: (state, items: any[], filterExpression: string, key = ['_item_', '_index_']) => {
       const filteredItems = items?.filter((item: any, index) => {
         const result = parser.evaluate(
           filterExpression,
           {
             ...state.variables,
-            _item_: item,
-            _index_: index
+            [key[0]]: item,
+            [key[1]]: index
           },
         );
         return result === true;
@@ -109,28 +109,28 @@ export function createParser(props: ExpressionParserConstructor = {}) {
 
       return filteredItems || []
     },
-    map: (state, items: any[], filterExpression: string) => {
+    map: (state, items: any[], filterExpression: string, key = ['_item_', '_index_']) => {
       const filteredItems = items?.map((item: any, index) => {
         return parser.evaluate(
           filterExpression,
           {
             ...state.variables,
-            _item_: item,
-            _index_: index
+            [key[0]]: item,
+            [key[1]]: index
           }
         );
       });
 
       return filteredItems || []
     },
-    some: (state, items: any[], filterExpression: string) => {
+    some: (state, items: any[], filterExpression: string, key = ['_item_', '_index_']) => {
       const filteredItems = items?.some((item: any, index) => {
         return parser.evaluate(
           filterExpression,
           {
             ...state.variables,
-            _item_: item,
-            _index_: index
+            [key[0]]: item,
+            [key[1]]: index
           },
 
         );
@@ -138,30 +138,30 @@ export function createParser(props: ExpressionParserConstructor = {}) {
 
       return filteredItems;
     },
-    find: (state, items: any[], filterExpression: string) => {
+    find: (state, items: any[], filterExpression: string, key = ['_item_', '_index_']) => {
       const filteredItems = items?.find((item: any, index) => {
         return parser.evaluate(
           filterExpression,
           {
             ...state.variables,
-            _item_: item,
-            _index_: index
+            [key[0]]: item,
+            [key[1]]: index
           }
         );
       });
 
       return filteredItems;
     },
-    reduce: (state, items: any[], filterExpression: string, initial: any) => {
+    reduce: (state, items: any[], filterExpression: string, initial: any, key = ['_item_', '_curr_', '_index_']) => {
       const filteredItems = items?.reduce(
         (curr: any, item: any, index) => {
           return parser.evaluate(
             filterExpression,
             {
               ...state.variables,
-              _curr_: curr,
-              _item_: item,
-              _index_: index
+              [key[0]]: item,
+              [key[1]]: curr,
+              [key[2]]: index
             }
           );
         },
@@ -170,7 +170,7 @@ export function createParser(props: ExpressionParserConstructor = {}) {
 
       return filteredItems;
     },
-    unique: (state, items: any[], filterExpression?: string) => {
+    unique: (state, items: any[], filterExpression?: string, key = ['_item_', '_index_']) => {
       const filteredItems = items?.reduce(
         (uniqueList: any[], item: any, index) => {
           if (!filterExpression) {
@@ -182,16 +182,16 @@ export function createParser(props: ExpressionParserConstructor = {}) {
                 filterExpression,
                 {
                   ...state.variables,
-                  _item_: uniqueItem,
-                  _index_: index
+                  [key[0]]: uniqueItem,
+                  [key[1]]: index
                 }
               )
               const currValue = parser.evaluate(
                 filterExpression,
                 {
                   ...state.variables,
-                  _item_: item,
-                  _index_: index
+                  [key[0]]: item,
+                  [key[1]]: index
                 }
               )
               return uniqueItemValue === currValue
