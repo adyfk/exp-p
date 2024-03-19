@@ -40,6 +40,23 @@ export function createParser(props: ExpressionParserConstructor = {}) {
         return false
       }
     },
+    is_email: (_, value: any) => {
+      try {
+        return !!value?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/g);
+      } catch (error) {
+        return false;
+      }
+    },
+    is_html_empty: (_, value: any) => {
+      try {
+        if (!value) return true;
+        if (value === "<div></div>") return true;
+        if (value === "<span></span>") return true;
+        return false;
+      } catch (error) {
+        return false;
+      }
+    },
     // NUMBER ==================================================================================
     ceil: (_, value: number) => Math.ceil(value),
     round: (_, value: number) => Math.round(value),
