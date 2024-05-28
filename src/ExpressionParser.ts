@@ -23,10 +23,10 @@ const stringRegex = /(?:"[^"]*")|(?:'[^']*')/;
 const identifierRegex = /(?:\w+(?:\.\w+)*(?:\[\d+\])*|(?:\.\.\.\w+))/
 
 export class ExpressionParser {
-  private variables: VariableMap = {};
-  private functions: FunctionMap = {};
-  private operators: OperatorMap = {};
-  private regex: RegExp;
+  variables: VariableMap = {};
+  functions: FunctionMap = {};
+  operators: OperatorMap = {};
+  regex: RegExp;
 
   constructor({
     variables,
@@ -43,7 +43,7 @@ export class ExpressionParser {
       identifierRegex.source;
 
     if (regex) {
-      regexString += '|' + regex;
+      regexString += '|' + regex.source;
     }
     this.regex = new RegExp(regexString,
       'g'
