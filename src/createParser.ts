@@ -70,6 +70,12 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     upper: (_, value: string) => value.toUpperCase(),
     lower: (_, value: string) => value.toLowerCase(),
     regex: (_, value: any, regex: string, flags?: string) => new RegExp(regex, flags).test(value),
+    replace: (_, value: string, replaceValue: string, searchValue: string) => {
+      return (value || '')?.replace?.(searchValue, replaceValue) || ''
+    },
+    replace_regex: (_, value: string, replaceValue: string, regex: string, flags?: string) => {
+      return (value || '')?.replace?.(new RegExp(regex, flags), replaceValue) || ''
+    },
     // DATE ==================================================================================
     date: (_, date: string) => date ? moment(date).toISOString() : moment().toISOString(),
     date_day: (_, date: string) => date ? moment(date).date() : moment().date(),
