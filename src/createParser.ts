@@ -98,11 +98,13 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     },
     // OBJECT ==================================================================================
     assign: (_, source: Object, target: Object) => Object.assign(source, target),
-    // ARRAY ===================================================================================
-    includes: (_, arr: any[], value: any,) => {
+    // ARRAY | STRING ===================================================================================
+    includes: (_, arr: any[] | string, value: any,) => {
+      if (typeof arr === 'string') return arr.includes(value)
       if (Array.isArray(arr)) return arr.includes(value);
       return false;
     },
+    // ARRAY ===================================================================================
     min: (_, ...args) => Math.min(...args),
     max: (_, ...args) => Math.max(...args),
     sum: (state, arr, filterExpression: string, key = ['_item_', '_index_']) => arr.reduce((prev: number, curr: number, index: number) => {
