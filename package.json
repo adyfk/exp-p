@@ -19,7 +19,7 @@
     "test": "jest",
     "test:all": "jest --watchAll",
     "semantic-release": "semantic-release",
-    "commit": "cz",
+    "commit": "cz commit",
     "publish": "npm run build && cd ./dist && npm publish --access public"
   },
   "keywords": [],
