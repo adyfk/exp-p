@@ -76,6 +76,11 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     replace_regex: (_, value: string, replaceValue: string, regex: string, flags?: string) => {
       return (value || '')?.replace?.(new RegExp(regex, flags), replaceValue) || ''
     },
+    trim: (_, value: string) => (value || '').trim(),
+    substring: (_, value: string, start: number, end?: number) => (value || '').substring(start, end),
+    starts_with: (_, value: string, search: string) => (value || '').startsWith(search),
+    ends_with: (_, value: string, search: string) => (value || '').endsWith(search),
+    pad_start: (_, value: any, targetLength: number, padString: string) => String(value).padStart(targetLength, padString),
     // DATE ==================================================================================
     date: (_, date: string) => date ? moment(date).toISOString() : moment().toISOString(),
     date_day: (_, date: string) => date ? moment(date).date() : moment().date(),
@@ -92,6 +97,12 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     date_is_before: (_, date1: string, date2: string) => moment(date1).isBefore(date2),
     date_is_after: (_, date1: string, date2: string) => moment(date1).isAfter(date2),
 
+    date_diff: (_, date1: string, date2: string, unit: Unit = 'days', precise: boolean = false) => {
+      return moment(date1).diff(moment(date2), unit, precise);
+    },
+    date_start_of: (_, unit: Unit, date: string) => date ? moment(date).startOf(unit).toISOString() : moment().startOf(unit).toISOString(),
+    date_end_of: (_, unit: Unit, date: string) => date ? moment(date).endOf(unit).toISOString() : moment().endOf(unit).toISOString(),
+
     // CONDITION ==================================================================================
     if: (_, condition: boolean, truthy: any, falsy) => {
       return (condition) ? truthy : falsy
@@ -99,6 +110,12 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     // OBJECT ==================================================================================
     assign: (_, source: Object, target: Object) => Object.assign(source, target),
     get: (_, source: any, target: string) => source[target],
+    keys: (_, obj: object) => (typeof obj === 'object' && obj !== null) ? Object.keys(obj) : [],
+    values: (_, obj: object) => (typeof obj === 'object' && obj !== null) ? Object.values(obj) : [],
+    to_json: (_, value: any) => JSON.stringify(value),
+    parse_json: (_, value: string) => {
+      try { return JSON.parse(value); } catch (e) { return null; }
+    },
     // ARRAY | STRING ===================================================================================
     includes: (_, arr: any[] | string, value: any,) => {
       if (typeof arr === 'string') return arr.includes(value)
@@ -238,7 +255,51 @@ export function createParser(props: ExpressionParserConstructor = {}) {
 
       return filteredItems;
 
-    }
+    },
+    avg: (state, arr: any[], filterExpression: string, key = ['_item_', '_index_']) => {
+      if (!Array.isArray(arr) || arr.length === 0) return 0;
+
+      // Gunakan logika reduce yang sama dengan sum, lalu bagi length
+      const total = arr.reduce((prev: number, curr: number, index: number) => {
+        if (!filterExpression) return prev + curr;
+        const result = parser.evaluate(filterExpression, { ...state.variables, [key[0]]: curr, [key[1]]: index });
+        return prev + result;
+      }, 0);
+
+      return total / arr.length;
+    },
+    // Mengambil sebagian array (seperti pagination)
+    slice: (_, arr: any[], start: number, end?: number) => Array.isArray(arr) ? arr.slice(start, end) : [],
+    // Menggabungkan dua array
+    concat: (_, arr1: any[], arr2: any[]) => (Array.isArray(arr1) ? arr1 : []).concat(Array.isArray(arr2) ? arr2 : []),
+    // Meratakan array (contoh: [[1,2], [3]] menjadi [1,2,3])
+    flat: (_, arr: any[], depth: number = 1) => Array.isArray(arr) ? arr.flat(depth) : [],
+    // Tambahkan ke bagian ARRAY
+    sort: (state, items: any[], sortExpression: string, direction: 'asc' | 'desc' = 'asc', key = ['_item_', '_index_']) => {
+      if (!Array.isArray(items)) return [];
+
+      // Clone array agar tidak memutasi state asli
+      return [...items].sort((a, b) => {
+        // Jika tidak ada expression, sort langsung nilainya
+        let valA = a;
+        let valB = b;
+
+        // Jika ada expression, evaluasi nilainya (misal: item.price)
+        if (sortExpression) {
+          valA = parser.evaluate(sortExpression, { ...state.variables, [key[0]]: a });
+          valB = parser.evaluate(sortExpression, { ...state.variables, [key[0]]: b });
+        }
+
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    },
+
+
+    default: (_, value: any, defaultValue: any) => {
+      return (value === null || value === undefined || value === '') ? defaultValue : value;
+    },
   }
 
   parser.setFunctions(functions)
