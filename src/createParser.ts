@@ -98,6 +98,7 @@ export function createParser(props: ExpressionParserConstructor = {}) {
     },
     // OBJECT ==================================================================================
     assign: (_, source: Object, target: Object) => Object.assign(source, target),
+    get: (_, source: any, target: string) => source[target],
     // ARRAY | STRING ===================================================================================
     includes: (_, arr: any[] | string, value: any,) => {
       if (typeof arr === 'string') return arr.includes(value)
